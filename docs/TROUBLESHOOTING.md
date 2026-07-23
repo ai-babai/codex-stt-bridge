@@ -11,7 +11,15 @@ Possible causes:
 - `codex login` has not been completed.
 
 Do not copy another user's auth file. Complete a separate login for the runtime
-user.
+user. On a headless host, run:
+
+```bash
+codex login --device-auth
+```
+
+Open the displayed URL and enter the short code in a trusted browser. Codex
+creates the file on the host automatically; a browser callback URL is not an
+auth file and must not be pasted into chat or an issue.
 
 If Codex is configured to use a keyring, the bridge cannot read its
 credentials. This experimental provider requires:
@@ -100,3 +108,18 @@ Check:
 
 This is the intended failure isolation. Do not restart or reinstall all of
 Hermes before checking the bridge independently.
+
+## The CLI works but OpenClaw does not
+
+Check:
+
+- the absolute `command` in `tools.media.models`;
+- `args: ["--input", "{{MediaPath}}"]`;
+- `capabilities: ["audio"]`;
+- permissions of the OpenClaw runtime user;
+- that this same user owns `~/.codex/auth.json`;
+- the OpenClaw media timeout and size limits.
+
+Use the current `tools.media.models` contract. The retired
+`audio.transcription.command` setting and `{input}` placeholder are not
+compatible with the example in this repository.

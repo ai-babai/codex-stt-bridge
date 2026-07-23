@@ -16,7 +16,7 @@ Last live smoke check: `2026-07-24`.
 
 | Component | Verified version or form |
 | --- | --- |
-| Bridge | `0.1.0` |
+| Bridge | `0.2.0` |
 | Codex CLI | `0.145.0`, ChatGPT OAuth |
 | Hermes Agent | `0.19.0`, upstream tag `v2026.7.20` |
 | Server | Ubuntu 24.04, Python 3.12 |
@@ -47,7 +47,7 @@ without a bearer token, and the bridge must not extract it from the OS
 keychain through an unofficial workaround.
 
 All variable request constants are centralized in
-`src/hermes_codex_stt/constants.py`.
+`src/codex_stt_bridge/constants.py`.
 
 ## Likely compatibility breaks
 
@@ -125,13 +125,13 @@ These are diagnostic hypotheses, not a guaranteed public contract:
    transcript text.
 6. Change constants and parsing as narrowly as possible.
 7. Check the standalone CLI.
-8. Check Hermes command dispatch.
-9. Check a new incoming Telegram voice message.
+8. Check the configured agent command dispatch.
+9. Check a new incoming voice message.
 10. Update this document and `CHANGELOG.md`.
 
 ## When to stop using the bridge
 
-Disable the provider and keep Hermes text-only if the backend requires:
+Disable the provider and keep the agent text-only if the backend requires:
 
 - browser cookies;
 - bypassing device attestation;

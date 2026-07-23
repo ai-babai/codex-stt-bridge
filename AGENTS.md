@@ -6,7 +6,8 @@ This repository contains a small security-sensitive compatibility bridge.
 
 Convert an audio file to text through the internal Codex Desktop
 transcription flow, using the existing local Codex OAuth session, and expose
-that operation as a command provider for Hermes Agent.
+that operation as a small CLI for Hermes Agent, OpenClaw, and other local
+agent runtimes.
 
 ## Non-negotiable safety rules
 
@@ -26,7 +27,7 @@ The endpoint is internal and unsupported. Before changing the request
 contract, read `docs/API-COMPATIBILITY.md`.
 
 Keep endpoint, header and response-field constants centralized in
-`src/hermes_codex_stt/constants.py`.
+`src/codex_stt_bridge/constants.py`.
 
 When diagnosing a break:
 
@@ -35,7 +36,7 @@ When diagnosing a break:
    `anthnykr/codex-voice`;
 3. do not paste auth files, headers or network captures containing tokens into
    commits, chats or issues;
-4. keep failure isolated to STT and preserve normal Hermes text handling.
+4. keep failure isolated to STT and preserve normal agent text handling.
 
 ## Changes
 
@@ -43,7 +44,7 @@ When diagnosing a break:
 - Keep network responses bounded and reject empty transcripts.
 - Keep supported input formats explicit; do not turn the CLI into a generic
   file uploader.
-- Keep the CLI usable independently from Hermes.
+- Keep the CLI usable independently from any agent runtime.
 - Network-dependent checks must be explicit and must use user-owned,
   non-sensitive audio.
 - English documentation files without a language suffix are canonical. Keep

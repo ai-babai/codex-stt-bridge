@@ -16,7 +16,7 @@
 
 | Компонент | Проверенная версия/форма |
 | --- | --- |
-| Bridge | `0.1.0` |
+| Bridge | `0.2.0` |
 | Codex CLI | `0.145.0`, ChatGPT OAuth |
 | Hermes Agent | `0.19.0`, upstream tag `v2026.7.20` |
 | Server | Ubuntu 24.04, Python 3.12 |
@@ -47,7 +47,7 @@ Bridge поддерживает только `cli_auth_credentials_store = "file
 OS keychain обходным способом.
 
 Все изменяемые request constants находятся в
-`src/hermes_codex_stt/constants.py`.
+`src/codex_stt_bridge/constants.py`.
 
 ## Основные точки возможной поломки
 
@@ -126,13 +126,13 @@ Backend может начать строго проверять `originator`, в
    текст транскрипта.
 6. Менять constants и parser минимально.
 7. Проверить standalone CLI.
-8. Проверить Hermes command dispatch.
-9. Проверить новое входящее Telegram voice.
+8. Проверить command dispatch настроенного агента.
+9. Проверить новое входящее голосовое сообщение.
 10. Обновить этот документ и `CHANGELOG.md`.
 
 ## Когда прекратить использование
 
-Отключить provider и вернуться к text-only Hermes, если backend требует:
+Отключить provider и оставить агента в text-only режиме, если backend требует:
 
 - browser cookies;
 - обход device attestation;

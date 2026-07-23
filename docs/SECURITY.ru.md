@@ -16,7 +16,7 @@
 - access, refresh и ID tokens;
 - account ID;
 - browser cookies и callback URLs device auth;
-- Telegram bot token;
+- bot tokens платформ сообщений;
 - реальные `.env`;
 - приватные аудиозаписи и транскрипты.
 
@@ -72,14 +72,14 @@ security features.
 
 ```text
 ~/.codex/auth.json      0600
-Hermes config           0600
+agent config            0600
 transcript output       0600
 project source          без credential copies
 ```
 
 Запускать bridge следует от того же изолированного Unix-пользователя, которому
-принадлежит Codex login и Hermes runtime.
+принадлежит Codex login и agent runtime.
 
 Production executable рекомендуется хранить в admin-owned/read-only checkout.
-Command provider запускается с полными правами Unix-пользователя Hermes;
+Локальная команда запускается с полными правами Unix-пользователя агента;
 изменяемый агентом credential-handling код увеличивает persistence risk.

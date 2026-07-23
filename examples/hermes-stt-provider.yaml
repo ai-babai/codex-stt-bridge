@@ -5,6 +5,6 @@ stt:
   providers:
     codex-desktop:
       type: command
-      command: "/path/to/hermes-codex-stt/.venv/bin/codex-stt --input {input_path} --output {output_path}"
+      command: "/path/to/codex-stt-bridge/.venv/bin/codex-stt --input {input_path} --output {output_path}"
       format: txt
       timeout: 120

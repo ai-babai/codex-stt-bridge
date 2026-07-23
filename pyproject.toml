@@ -1,7 +1,7 @@
 [project]
-name = "hermes-codex-stt"
-version = "0.1.0"
-description = "Codex OAuth speech-to-text command provider for Hermes Agent"
+name = "codex-stt-bridge"
+version = "0.2.0"
+description = "Speech-to-text CLI bridge for AI agents using a local Codex login"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -9,7 +9,16 @@ license-files = ["LICENSE", "NOTICE.md"]
 authors = [
   { name = "ai-babai" },
 ]
-keywords = ["codex", "hermes-agent", "speech-to-text", "telegram"]
+keywords = [
+  "ai-agents",
+  "chatgpt",
+  "codex",
+  "hermes-agent",
+  "openclaw",
+  "speech-recognition",
+  "speech-to-text",
+  "voice-to-text",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
@@ -19,17 +28,19 @@ classifiers = [
 dependencies = []
 
 [project.scripts]
-codex-stt = "hermes_codex_stt.cli:main"
+codex-stt = "codex_stt_bridge.cli:main"
 
 [project.urls]
-Repository = "https://github.com/ai-babai/hermes-codex-stt"
+Documentation = "https://github.com/ai-babai/codex-stt-bridge#readme"
+Issues = "https://github.com/ai-babai/codex-stt-bridge/issues"
+Repository = "https://github.com/ai-babai/codex-stt-bridge"
 
 [build-system]
 requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hermes_codex_stt"]
+packages = ["src/codex_stt_bridge"]
 
 [tool.ruff]
 target-version = "py311"

@@ -1,0 +1,19 @@
+{
+  tools: {
+    media: {
+      models: [
+        {
+          type: "cli",
+          command: "/path/to/codex-stt-bridge/.venv/bin/codex-stt",
+          args: ["--input", "{{MediaPath}}"],
+          timeoutSeconds: 120,
+          capabilities: ["audio"],
+        },
+      ],
+      audio: {
+        enabled: true,
+        echoTranscript: true,
+      },
+    },
+  },
+}

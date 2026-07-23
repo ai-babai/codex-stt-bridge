@@ -16,7 +16,7 @@ object may be copied immediately.
 - access, refresh, and ID tokens;
 - account ID;
 - browser cookies and device-auth callback URLs;
-- Telegram bot token;
+- messaging-platform bot tokens;
 - real `.env` files;
 - private audio recordings and transcripts.
 
@@ -73,14 +73,14 @@ Recommended:
 
 ```text
 ~/.codex/auth.json      0600
-Hermes config           0600
+agent config            0600
 transcript output       0600
 project source          no credential copies
 ```
 
 Run the bridge as the same isolated Unix user that owns the Codex login and
-Hermes runtime.
+agent runtime.
 
 Keep the production executable in an admin-owned, read-only checkout. A
-command provider runs with the full permissions of the Hermes Unix user;
+local command runs with the full permissions of the agent Unix user;
 agent-writable credential-handling code increases the persistence risk.

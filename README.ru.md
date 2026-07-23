@@ -1,54 +1,98 @@
-# Hermes Codex STT
+# Codex STT Bridge
 
 [English](README.md) | **Русский**
 
-Небольшая команда для расшифровки аудио через тот же внутренний backend,
-который использует Codex Desktop. Команда использует уже существующую
-ChatGPT/Codex OAuth-сессию и подключается к Hermes Agent как штатный
-command-type STT provider.
+Преобразование голоса в текст для AI-агентов через существующий локальный
+Codex login. Команда `codex-stt` принимает аудиофайл, отправляет его в backend
+транскрипции Codex Desktop и возвращает обычный UTF-8 текст.
+
+Проект рассчитан на пользователей, которые входят в Codex через тариф
+ChatGPT, в том числе по подписке. OpenAI Platform API key не требуется и не
+используется.
 
 ```text
-Telegram voice
-  → Hermes STT dispatcher
+Голосовое сообщение или аудиофайл
+  → Hermes, OpenClaw или другой агент
   → codex-stt
-  → Codex Desktop transcription backend
-  → UTF-8 transcript
-  → обычный текстовый turn Hermes
+  → backend транскрипции Codex Desktop
+  → текстовый транскрипт
+  → обычный turn агента
 ```
 
-## Статус и ограничения
+CLI не зависит от конкретного агента. Его можно использовать:
 
-Рабочий прототип проверен на Linux с Telegram OGG/Opus и авторизацией Codex
-через ChatGPT OAuth:
+- как command-type STT provider в Hermes Agent;
+- как media CLI в OpenClaw;
+- из shell-скриптов и других агентов, умеющих запускать локальные команды.
 
-- OpenAI Platform API key не требуется и не используется;
-- Whisper, Faster Whisper и другие локальные STT-модели не используются;
-- ffmpeg и предварительная конвертация не требуются;
-- отдельный Hermes plugin, MCP-сервер, daemon или контейнер не нужны.
+## Важное ограничение совместимости
 
-Транскрипционный endpoint Codex Desktop является внутренним и официально не
-документирован. OpenAI может изменить его без предупреждения. Это
-экспериментальная интеграция, а не официальный OpenAI SDK.
+Endpoint транскрипции является внутренним и официально не документирован. Это
+экспериментальный compatibility bridge, а не официальный OpenAI SDK или API.
+OpenAI может без предупреждения изменить endpoint, требования к авторизации,
+доступность или условия для тарифов.
+
+Проект не утверждает, что STT официально входит в конкретную подписку ChatGPT.
+Он использует действующую локальную Codex/ChatGPT OAuth-сессию и безопасно
+останавливается, если этот механизм перестаёт работать.
 
 ## Требования
 
 - Python 3.11+;
 - установленный Codex CLI;
-- выполненный `codex login` от того же Unix-пользователя;
-- file-based Codex credential storage (`cli_auth_credentials_store = "file"`);
-- права `0600` на `~/.codex/auth.json`;
-- доступ к `https://chatgpt.com`;
-- Hermes Agent — только если команда используется как его STT provider.
+- действующий вход Codex через ChatGPT от того же Unix-пользователя, который
+  запускает bridge;
+- файловое хранение Codex credentials;
+- доступ к `https://chatgpt.com`.
+
+Whisper, Faster Whisper, локальная STT-модель, ffmpeg-конвертация, daemon,
+контейнер, MCP-сервер и отдельный сетевой порт не требуются.
+
+## Как безопасно получить `auth.json`
+
+Не скачивайте, не создавайте и не копируйте `auth.json` вручную. Его должен
+создать и обновлять официальный Codex CLI.
+
+Добавьте top-level настройку в `~/.codex/config.toml`:
+
+```toml
+cli_auth_credentials_store = "file"
+```
+
+На компьютере с браузером:
+
+```bash
+codex login
+codex login status
+chmod 600 ~/.codex/auth.json
+```
+
+На удалённом сервере без браузера:
+
+```bash
+codex login --device-auth
+codex login status
+chmod 600 ~/.codex/auth.json
+```
+
+Когда Codex попросит, откройте URL в доверенном браузере и введите короткий
+device code. После подтверждения `~/.codex/auth.json` автоматически появится
+на сервере.
+
+Выполняйте login от того же Unix-пользователя, который будет запускать
+`codex-stt`. Не копируйте auth другого пользователя, не отправляйте callback
+URL из браузера в чат и не добавляйте `auth.json` в Git: файл содержит
+credentials и должен храниться как пароль.
 
 ## Установка
 
 ```bash
-git clone git@github.com:ai-babai/hermes-codex-stt.git
-cd hermes-codex-stt
-uv sync
+git clone https://github.com/ai-babai/codex-stt-bridge.git
+cd codex-stt-bridge
+uv sync --frozen
 ```
 
-Для production:
+Для production checkout:
 
 ```bash
 uv sync --frozen --no-dev
@@ -56,13 +100,15 @@ uv sync --frozen --no-dev
 
 ## Использование
 
+Запись транскрипта в файл:
+
 ```bash
 .venv/bin/codex-stt \
   --input /path/to/message.ogg \
   --output /path/to/transcript.txt
 ```
 
-Без `--output` транскрипт выводится в stdout:
+Или вывод в stdout:
 
 ```bash
 .venv/bin/codex-stt --input /path/to/message.ogg
@@ -72,42 +118,43 @@ uv sync --frozen --no-dev
 
 - `--auth-path` — нестандартный путь к Codex `auth.json`;
 - `--timeout` — таймаут HTTPS-запроса;
-- `--language` — совместимый с Hermes аргумент; backend сейчас сам определяет
-  язык, поэтому значение не отправляется.
+- `--language` — аргумент совместимости с агентами; backend сейчас сам
+  определяет язык, поэтому значение не отправляется.
 
 Переменные окружения:
 
-- `CODEX_AUTH_PATH` — альтернативный путь к Codex auth;
+- `CODEX_AUTH_PATH` — альтернативный путь к Codex auth-файлу;
 - `CODEX_CLI_PATH` — путь к Codex CLI для обновления истёкшей OAuth-сессии.
 
-## Hermes
-
-Пример находится в
-[`examples/hermes-stt-provider.yaml`](examples/hermes-stt-provider.yaml).
-
-Команда возвращает ненулевой exit code при ошибке. Успешный транскрипт
+При ошибке команда возвращает ненулевой exit code. Успешный output-файл
 записывается атомарно с правами `0600`.
 
 Exit codes:
 
 - `0` — транскрипт создан;
-- `1` — ошибка auth, сети, совместимости API или файловой операции;
+- `1` — ошибка авторизации, сети, совместимости или файловой операции;
 - `2` — некорректные CLI arguments.
+
+## Интеграция с агентами
+
+- [Пример command provider для Hermes](examples/hermes-stt-provider.yaml)
+- [Пример media CLI для OpenClaw](examples/openclaw-media.json5)
+
+В production используйте абсолютный путь к `codex-stt`. Агент и bridge должны
+работать от Unix-пользователя, которому принадлежит Codex login.
 
 ## Безопасность
 
-Проект не содержит и не должен содержать ключи, токены, реальные аудиофайлы
-или транскрипты. OAuth читается непосредственно из локального Codex auth-файла
-и не копируется.
+В репозитории не должно быть ключей, токенов, browser callback URL, реальных
+аудиофайлов и транскриптов. OAuth читается непосредственно из локального
+Codex auth-файла и не копируется bridge.
 
-Это публичный репозиторий. Никогда не добавляйте credentials или приватные
-данные пользователей. Полные правила:
-[`docs/SECURITY.ru.md`](docs/SECURITY.ru.md).
+Production checkout и виртуальное окружение рекомендуется сделать
+administrator-owned и read-only для runtime-пользователя агента. Это не
+скрывает OAuth от самого пользователя, но не позволяет агенту незаметно
+изменить код, работающий с credentials.
 
-Production checkout и виртуальное окружение рекомендуется делать
-администраторскими/read-only для runtime-пользователя Hermes. Это не скрывает
-OAuth от самого пользователя, но не позволяет агенту незаметно закрепить
-изменение в credential-handling коде.
+Полные правила: [docs/SECURITY.ru.md](docs/SECURITY.ru.md).
 
 ## Документация
 

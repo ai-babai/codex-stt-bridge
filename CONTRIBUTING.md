@@ -6,7 +6,7 @@
 
 - Never add secrets, real audio recordings, or transcripts to this public
   repository.
-- Keep the CLI independent from Hermes.
+- Keep the CLI independent from any particular agent runtime.
 - Do not add implicit API-key or local STT fallbacks.
 - Change the internal HTTP contract only together with
   `docs/API-COMPATIBILITY.md` and `docs/API-COMPATIBILITY.ru.md`.
@@ -25,7 +25,7 @@ environments so they do not enter the production environment:
 ```bash
 uvx ruff check src
 uvx ruff format --check src
-uvx mypy --strict src/hermes_codex_stt
+uvx mypy --strict src/codex_stt_bridge
 uvx bandit -q -r src
 uv build
 ```
@@ -40,8 +40,8 @@ Recommended order:
 
 1. Check the CLI with a missing or unsupported input file.
 2. Check the standalone CLI with approved test audio.
-3. Check Hermes command-provider dispatch.
-4. Check a new Telegram voice message.
+3. Check the relevant agent integration, such as Hermes or OpenClaw.
+4. Check a new voice message through that agent.
 5. Confirm that normal text turns still work when STT is unavailable.
 
 ## Before committing

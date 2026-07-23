@@ -4,36 +4,37 @@
 
 ## Purpose
 
-`hermes-codex-stt` converts one local audio file into text. It is an isolated
-adapter between the standard Hermes Agent command-provider interface and the
-internal Codex Desktop transcription flow.
+`codex-stt-bridge` converts one local audio file into text. It is an isolated
+adapter between an agent runtime's local-command interface and the internal
+Codex Desktop transcription flow.
 
 ```mermaid
 flowchart LR
-    TG["Telegram voice/audio"] --> HG["Hermes Gateway"]
-    HG --> DP["Hermes STT dispatcher"]
-    DP --> CLI["codex-stt CLI"]
+    IN["Voice message or audio file"] --> AR["Agent runtime<br/>Hermes, OpenClaw, or other"]
+    AR --> CLI["codex-stt CLI"]
     CLI --> AF["~/.codex/auth.json<br/>read only"]
     CLI --> BE["chatgpt.com<br/>Codex Desktop transcription"]
     BE --> CLI
     CLI --> TF["UTF-8 transcript<br/>mode 0600"]
-    TF --> HG
-    HG --> AG["Normal Hermes text turn"]
+    TF --> AR
+    AR --> AG["Normal agent text turn"]
 ```
 
 ## Responsibilities
 
-### Hermes
+### Agent runtime
 
-Hermes is responsible for:
+The agent runtime is responsible for:
 
-- receiving the Telegram file;
-- invoking the command with `{input_path}` and `{output_path}`;
+- receiving or locating the audio file;
+- invoking the CLI with an input path and optionally an output path;
 - reading the result;
 - showing the recognized text;
 - continuing with a normal agent turn.
 
-Hermes core is not patched.
+Hermes uses a command-type STT provider with `{input_path}` and
+`{output_path}`. OpenClaw uses a media CLI with `{{MediaPath}}` and reads
+stdout. Neither agent core is patched.
 
 ### Bridge
 
@@ -60,22 +61,22 @@ endpoint requires a bearer token. If Codex stops supporting a safe file-based
 flow, the bridge must stop rather than extract credentials through an
 unofficial workaround.
 
-## Why a command provider
+## Why a local CLI
 
-A command provider is the smallest stable integration boundary:
+A local CLI is the smallest stable integration boundary:
 
 - no separate process or port;
-- no dependency on the Hermes plugin API;
+- no dependency on an agent plugin API;
 - no MCP server;
 - an STT failure does not stop normal text chat;
 - the CLI can be checked independently from the gateway;
-- updating the bridge does not require changing Hermes core.
+- updating the bridge does not require changing the agent core.
 
-The Hermes documentation recommends a Python plugin when OAuth refresh,
-streaming, or provider-specific setup must be part of the provider API. Here,
-refresh is encapsulated inside a deterministic one-command CLI, so the command
-provider remains the smaller and better-isolated boundary. Reconsider a plugin
-if streaming chunks, provider metadata, or interactive setup become necessary.
+Hermes and OpenClaw both support bounded local commands for transcription.
+Refresh is encapsulated inside a deterministic one-command CLI, so this
+remains a smaller and better-isolated boundary than a custom plugin.
+Reconsider a plugin if streaming chunks, provider metadata, or interactive
+setup become necessary.
 
 ## Failure flow
 
@@ -90,7 +91,7 @@ flowchart TD
     F --> D
     F --> G
     D --> H["Atomic transcript file"]
-    G --> I["Hermes reports STT failure<br/>text chat remains available"]
+    G --> I["Agent reports STT failure<br/>text chat remains available"]
 ```
 
 ## Data flow
@@ -101,18 +102,18 @@ flowchart TD
 | OAuth access token | yes | `chatgpt.com` | no |
 | Codex account ID | yes | `chatgpt.com` | no |
 | Refresh token | not directly | through Codex CLI | no |
-| Transcript | yes | Hermes | only at the requested output path |
+| Transcript | yes | agent runtime | stdout or the requested output path |
 
 ## Production ownership
 
 Recommended boundary:
 
 ```text
-/opt/hermes-codex-stt/       root/admin owned, runtime read+execute
-~/.codex/auth.json           hermes owned, mode 0600
-Hermes config                hermes owned, mode 0600
-audio cache                  hermes owned
-transcript temp output       hermes owned, mode 0600
+/opt/codex-stt-bridge/       root/admin owned, runtime read+execute
+~/.codex/auth.json           agent user owned, mode 0600
+agent config                 agent user owned, mode 0600
+audio cache                  agent user owned
+transcript temp output       agent user owned, mode 0600
 ```
 
 A user-writable checkout is acceptable for development, but it is not the

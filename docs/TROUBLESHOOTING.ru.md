@@ -9,6 +9,15 @@
 - `codex login` не выполнялся.
 
 Не копируйте чужой auth-файл. Выполните отдельный login для runtime user.
+На headless-сервере запустите:
+
+```bash
+codex login --device-auth
+```
+
+Откройте показанный URL и введите короткий код в доверенном браузере. Codex
+сам создаст файл на сервере; browser callback URL не является auth-файлом, его
+нельзя вставлять в чат или issue.
 
 Если Codex настроен на keyring, bridge не будет читать credentials. Для этого
 экспериментального provider требуется:
@@ -97,3 +106,18 @@ Bridge намеренно не является универсальным file 
 
 Это ожидаемая изоляция отказа. Не перезапускайте и не переустанавливайте весь
 Hermes до standalone-проверки bridge.
+
+## CLI работает, OpenClaw — нет
+
+Проверить:
+
+- абсолютный `command` в `tools.media.models`;
+- `args: ["--input", "{{MediaPath}}"]`;
+- `capabilities: ["audio"]`;
+- права runtime-пользователя OpenClaw;
+- принадлежит ли `~/.codex/auth.json` тому же пользователю;
+- timeout и size limits OpenClaw media.
+
+Используйте актуальный контракт `tools.media.models`. Устаревшая настройка
+`audio.transcription.command` и placeholder `{input}` несовместимы с примером
+из этого репозитория.

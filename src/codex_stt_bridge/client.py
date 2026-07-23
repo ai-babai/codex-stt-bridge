@@ -12,14 +12,14 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-from hermes_codex_stt.auth import (
+from codex_stt_bridge.auth import (
     AuthError,
     CodexCredentials,
     default_auth_path,
     read_credentials,
     refresh_credentials,
 )
-from hermes_codex_stt.constants import (
+from codex_stt_bridge.constants import (
     DEFAULT_MAX_AUDIO_BYTES,
     DEFAULT_TIMEOUT_SECONDS,
     MAX_RESPONSE_BYTES,
@@ -78,7 +78,7 @@ def _safe_filename(audio_path: Path) -> str:
 
 
 def _multipart_body(audio_path: Path) -> tuple[bytes, str]:
-    boundary = f"----hermes-codex-stt-{uuid.uuid4().hex}"
+    boundary = f"----codex-stt-bridge-{uuid.uuid4().hex}"
     prefix = (
         f"--{boundary}\r\n"
         f'Content-Disposition: form-data; name="{MULTIPART_FILE_FIELD}"; '

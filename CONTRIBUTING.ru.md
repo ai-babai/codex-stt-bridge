@@ -6,7 +6,7 @@
 
 - Не добавлять секреты, реальные аудиофайлы и транскрипты в этот публичный
   репозиторий.
-- Сохранять CLI независимым от Hermes.
+- Сохранять CLI независимым от конкретного agent runtime.
 - Не добавлять неявный API-key или локальный STT fallback.
 - Менять внутренний HTTP-контракт только вместе с
   `docs/API-COMPATIBILITY.md` и `docs/API-COMPATIBILITY.ru.md`.
@@ -24,7 +24,7 @@ uv sync --frozen
 ```bash
 uvx ruff check src
 uvx ruff format --check src
-uvx mypy --strict src/hermes_codex_stt
+uvx mypy --strict src/codex_stt_bridge
 uvx bandit -q -r src
 uv build
 ```
@@ -39,8 +39,8 @@ uv build
 
 1. проверить CLI на отсутствующем/неподдерживаемом файле;
 2. проверить standalone CLI на разрешённом тестовом аудио;
-3. проверить Hermes command-provider dispatch;
-4. проверить новое Telegram voice;
+3. проверить нужную интеграцию, например Hermes или OpenClaw;
+4. проверить новое голосовое сообщение через этого агента;
 5. убедиться, что обычные text turns работают при недоступном STT.
 
 ## Перед commit
