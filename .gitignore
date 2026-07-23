@@ -17,6 +17,7 @@ auth.json
 *.pem
 *.key
 *.p12
+.python-version
 
 *.ogg
 *.oga

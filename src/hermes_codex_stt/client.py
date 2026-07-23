@@ -7,6 +7,7 @@ import mimetypes
 import platform
 import uuid
 from pathlib import Path
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -21,9 +22,11 @@ from hermes_codex_stt.auth import (
 from hermes_codex_stt.constants import (
     DEFAULT_MAX_AUDIO_BYTES,
     DEFAULT_TIMEOUT_SECONDS,
+    MAX_RESPONSE_BYTES,
     MULTIPART_FILE_FIELD,
     ORIGINATOR,
     RESPONSE_TEXT_FIELD,
+    SUPPORTED_AUDIO_SUFFIXES,
     TRANSCRIPTION_ENDPOINT,
     TRANSCRIPTION_HOST,
 )
@@ -40,7 +43,15 @@ class UnauthorizedError(TranscriptionError):
 class _RejectRedirects(HTTPRedirectHandler):
     """Fail closed so credential headers never follow an HTTP redirect."""
 
-    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+    def redirect_request(
+        self,
+        req: Request,
+        fp: Any,
+        code: int,
+        msg: str,
+        headers: Any,
+        newurl: str,
+    ) -> None:
         return None
 
 
@@ -50,6 +61,8 @@ def _content_type(audio_path: Path) -> str:
         ".ogg": "audio/ogg",
         ".opus": "audio/ogg",
         ".m4a": "audio/mp4",
+        ".mp4": "audio/mp4",
+        ".webm": "audio/webm",
     }
     return overrides.get(
         audio_path.suffix.lower(),
@@ -71,8 +84,8 @@ def _multipart_body(audio_path: Path) -> tuple[bytes, str]:
         f'Content-Disposition: form-data; name="{MULTIPART_FILE_FIELD}"; '
         f'filename="{_safe_filename(audio_path)}"\r\n'
         f"Content-Type: {_content_type(audio_path)}\r\n\r\n"
-    ).encode("utf-8")
-    suffix = f"\r\n--{boundary}--\r\n".encode("utf-8")
+    ).encode()
+    suffix = f"\r\n--{boundary}--\r\n".encode()
     return prefix + audio_path.read_bytes() + suffix, boundary
 
 
@@ -112,7 +125,7 @@ def _request_transcript(
     try:
         opener = build_opener(_RejectRedirects())
         with opener.open(request, timeout=timeout) as response:
-            response_data = response.read()
+            response_data = response.read(MAX_RESPONSE_BYTES + 1)
     except HTTPError as exc:
         if exc.code == 401:
             raise UnauthorizedError("Codex auth expired") from exc
@@ -124,6 +137,9 @@ def _request_transcript(
             f"Codex transcription backend is unavailable: {exc.reason}"
         ) from exc
 
+    if len(response_data) > MAX_RESPONSE_BYTES:
+        raise TranscriptionError("Codex transcription response is unexpectedly large")
+
     try:
         payload = json.loads(response_data)
         text = payload[RESPONSE_TEXT_FIELD]
@@ -134,7 +150,10 @@ def _request_transcript(
 
     if not isinstance(text, str):
         raise TranscriptionError("Codex transcription response has no text")
-    return text.strip()
+    transcript = text.strip()
+    if not transcript:
+        raise TranscriptionError("Codex transcription response is empty")
+    return transcript
 
 
 def transcribe_audio(
@@ -154,6 +173,12 @@ def transcribe_audio(
     if size > max_audio_bytes:
         limit_mib = max_audio_bytes // (1024 * 1024)
         raise TranscriptionError(f"Audio file exceeds the {limit_mib} MiB limit")
+    if audio_path.suffix.lower() not in SUPPORTED_AUDIO_SUFFIXES:
+        supported = ", ".join(sorted(SUPPORTED_AUDIO_SUFFIXES))
+        raise TranscriptionError(
+            f"Unsupported audio extension {audio_path.suffix or '<none>'}; "
+            f"expected one of: {supported}"
+        )
 
     resolved_auth_path = (auth_path or default_auth_path()).expanduser()
     try:

@@ -26,8 +26,11 @@ Private GitHub repository уменьшает публичную видимост
 - токены не принимаются через CLI arguments;
 - токены не выводятся в stdout/stderr;
 - response body ошибок не выводится;
+- response body читается с лимитом 1 MiB;
 - subprocess stderr Codex не включается в пользовательскую ошибку;
 - bridge не пишет auth-файл;
+- на POSIX auth-файл с правами шире `0600` отклоняется;
+- принимаются только явно перечисленные audio extensions;
 - output создаётся атомарно с mode `0600`;
 - реальные аудиоформаты и `auth.json` игнорируются Git.
 
@@ -45,6 +48,10 @@ git grep -n -I -E \
 Совпадения в документации и названиях полей допустимы только без значений.
 
 Дополнительно проверить staged blobs secret scanner'ом, если он доступен.
+
+Для private repository личного GitHub-аккаунта нельзя считать server-side
+secret scanning гарантированно доступным. Локальная pre-push проверка остаётся
+обязательной даже при включённых Dependabot и GitHub security features.
 
 ## Если секрет попал в Git
 
@@ -70,3 +77,7 @@ project source          без credential copies
 
 Запускать bridge следует от того же изолированного Unix-пользователя, которому
 принадлежит Codex login и Hermes runtime.
+
+Production executable рекомендуется хранить в admin-owned/read-only checkout.
+Command provider запускается с полными правами Unix-пользователя Hermes;
+изменяемый агентом credential-handling код увеличивает persistence risk.

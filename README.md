@@ -33,6 +33,8 @@ Telegram voice
 - Python 3.11+;
 - установленный Codex CLI;
 - выполненный `codex login` от того же Unix-пользователя;
+- file-based Codex credential storage (`cli_auth_credentials_store = "file"`);
+- права `0600` на `~/.codex/auth.json`;
 - доступ к `https://chatgpt.com`;
 - Hermes Agent — только если команда используется как его STT provider.
 
@@ -42,6 +44,12 @@ Telegram voice
 git clone git@github.com:ai-babai/hermes-codex-stt.git
 cd hermes-codex-stt
 uv sync
+```
+
+Для production:
+
+```bash
+uv sync --frozen --no-dev
 ```
 
 ## Использование
@@ -78,6 +86,12 @@ uv sync
 Команда возвращает ненулевой exit code при ошибке. Успешный транскрипт
 записывается атомарно с правами `0600`.
 
+Exit codes:
+
+- `0` — транскрипт создан;
+- `1` — ошибка auth, сети, совместимости API или файловой операции;
+- `2` — некорректные CLI arguments.
+
 ## Безопасность
 
 Проект не содержит и не должен содержать ключи, токены, реальные аудиофайлы
@@ -87,6 +101,11 @@ uv sync
 Private-видимость репозитория не считается защитой от утечки секретов. Полные
 правила: [`docs/SECURITY.md`](docs/SECURITY.md).
 
+Production checkout и виртуальное окружение рекомендуется делать
+администраторскими/read-only для runtime-пользователя Hermes. Это не скрывает
+OAuth от самого пользователя, но не позволяет агенту незаметно закрепить
+изменение в credential-handling коде.
+
 ## Документация
 
 - [Архитектура](docs/ARCHITECTURE.md)
@@ -94,6 +113,7 @@ Private-видимость репозитория не считается защ
 - [Безопасность](docs/SECURITY.md)
 - [Установка и эксплуатация](docs/OPERATIONS.md)
 - [Диагностика](docs/TROUBLESHOOTING.md)
+- [Разработка](CONTRIBUTING.md)
 
 ## Происхождение
 

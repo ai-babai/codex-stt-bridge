@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import subprocess
+import stat
+import subprocess  # nosec B404
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -28,14 +29,25 @@ def default_auth_path() -> Path:
 
 def read_credentials(auth_path: Path) -> CodexCredentials:
     try:
-        payload = json.loads(auth_path.read_text(encoding="utf-8"))
-        tokens = payload["tokens"]
-        access_token = tokens["access_token"]
-        account_id = tokens["account_id"]
+        auth_stat = auth_path.stat()
     except FileNotFoundError as exc:
         raise AuthError(
             f"Codex auth is missing at {auth_path}; run `codex login` first"
         ) from exc
+
+    if os.name == "posix":
+        permissions = stat.S_IMODE(auth_stat.st_mode)
+        if permissions & 0o077:
+            raise AuthError(
+                f"Codex auth permissions are too broad ({permissions:o}); "
+                f"run `chmod 600 {auth_path}`"
+            )
+
+    try:
+        payload = json.loads(auth_path.read_text(encoding="utf-8"))
+        tokens = payload["tokens"]
+        access_token = tokens["access_token"]
+        account_id = tokens["account_id"]
     except (json.JSONDecodeError, KeyError, TypeError) as exc:
         raise AuthError(
             f"Codex auth at {auth_path} is incomplete; run `codex login` again"
@@ -97,7 +109,8 @@ def refresh_credentials(
     input_text = "".join(json.dumps(message) + "\n" for message in messages)
 
     try:
-        result = subprocess.run(
+        # The executable is resolved from a fixed local allowlist above.
+        result = subprocess.run(  # nosec B603
             [resolve_codex_binary(), "app-server", "--listen", "stdio://"],
             input=input_text,
             text=True,
@@ -111,9 +124,7 @@ def refresh_credentials(
         raise AuthError(f"Codex auth refresh could not start: {exc}") from exc
 
     if result.returncode != 0:
-        raise AuthError(
-            f"Codex auth refresh failed with exit code {result.returncode}"
-        )
+        raise AuthError(f"Codex auth refresh failed with exit code {result.returncode}")
 
     for line in result.stdout.splitlines():
         try:

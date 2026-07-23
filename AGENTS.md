@@ -17,6 +17,7 @@ that operation as a command provider for Hermes Agent.
 - Never use an OpenAI Platform API key as an implicit fallback.
 - Never silently fall back to a local STT model.
 - Keep authentication files read-only from the bridge's perspective.
+- Require mode `0600` for file-based Codex credentials on POSIX.
 - Send Codex credentials only to the fixed `https://chatgpt.com` endpoint.
 
 ## Compatibility boundary
@@ -39,6 +40,9 @@ When diagnosing a break:
 ## Changes
 
 - Prefer Python standard library over new runtime dependencies.
+- Keep network responses bounded and reject empty transcripts.
+- Keep supported input formats explicit; do not turn the CLI into a generic
+  file uploader.
 - Keep the CLI usable independently from Hermes.
 - Network-dependent checks must be explicit and must use user-owned,
   non-sensitive audio.

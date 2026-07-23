@@ -40,7 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Transcribe audio using the current Codex Desktop OAuth session"
     )
-    parser.add_argument("--version", action="version", version=__version__)
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
     parser.add_argument("--input", required=True, type=Path, help="input audio file")
     parser.add_argument("--output", type=Path, help="UTF-8 transcript file")
     parser.add_argument(
@@ -74,6 +78,9 @@ def main(argv: list[str] | None = None) -> int:
             print(transcript)
     except TranscriptionError as exc:
         print(f"codex-stt: {exc}", file=sys.stderr)
+        return 1
+    except OSError as exc:
+        print(f"codex-stt: file operation failed: {exc}", file=sys.stderr)
         return 1
 
     return 0

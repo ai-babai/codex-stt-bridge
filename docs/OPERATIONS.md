@@ -8,6 +8,12 @@ cd hermes-codex-stt
 uv sync --frozen
 ```
 
+Для production checkout:
+
+```bash
+uv sync --frozen --no-dev
+```
+
 Codex login должен принадлежать runtime-пользователю:
 
 ```bash
@@ -15,6 +21,18 @@ codex login status
 ```
 
 Не копируйте auth другого Unix-пользователя.
+
+Проверьте file-based storage в `~/.codex/config.toml`:
+
+```toml
+cli_auth_credentials_store = "file"
+```
+
+И права:
+
+```bash
+chmod 600 ~/.codex/auth.json
+```
 
 ## Standalone smoke
 
@@ -40,6 +58,9 @@ rm -f "$out"
 - `timeout: 120` — ограничивает зависший backend;
 - `format: txt` — Hermes читает простой UTF-8 output.
 
+Имя `codex-desktop` намеренно не совпадает со встроенными provider names
+Hermes: встроенные имена имеют приоритет над custom command providers.
+
 После изменения конфигурации:
 
 1. сохранить backup;
@@ -49,13 +70,24 @@ rm -f "$out"
 5. проверить новое Telegram voice;
 6. убедиться, что обычный текстовый чат продолжает работать.
 
+## Production hardening
+
+- executable path должен быть абсолютным;
+- checkout и `.venv` желательно сделать root/admin-owned и read-only для
+  пользователя Hermes;
+- auth и config остаются `hermes:hermes`, mode `0600`;
+- не передавайте OAuth через environment или command arguments;
+- не включайте shell debug/`set -x`;
+- не добавляйте автоматический retry кроме одного refresh после 401;
+- не запускайте bridge как отдельный daemon и не открывайте сетевой порт.
+
 ## Обновление
 
 ```bash
 git fetch origin
-git checkout main
+git switch main
 git pull --ff-only
-uv sync --frozen
+uv sync --frozen --no-dev
 ```
 
 Перед обновлением сохраните текущий commit SHA. При несовместимости вернитесь

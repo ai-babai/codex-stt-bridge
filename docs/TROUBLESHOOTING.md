@@ -8,6 +8,23 @@
 
 Не копируйте чужой auth-файл. Выполните отдельный login для runtime user.
 
+Если Codex настроен на keyring, bridge не будет читать credentials. Для этого
+экспериментального provider требуется:
+
+```toml
+cli_auth_credentials_store = "file"
+```
+
+После изменения выполните новый `codex login`.
+
+## `Codex auth permissions are too broad`
+
+На POSIX bridge требует:
+
+```bash
+chmod 600 ~/.codex/auth.json
+```
+
 ## `Codex CLI was not found`
 
 Укажите:
@@ -48,6 +65,18 @@ Desktop и upstream `anthnykr/codex-voice`.
 Backend больше не возвращает строковое поле `text`. Не печатайте полный body:
 проверьте форму ответа только в приватной локальной диагностике и обновите
 parser минимально.
+
+## `response is unexpectedly large` или `response is empty`
+
+Это считается несовместимостью backend, а не успешным пустым сообщением.
+Проверьте `API-COMPATIBILITY.md`; не увеличивайте лимит и не принимайте пустой
+результат без анализа нового контракта.
+
+## `Unsupported audio extension`
+
+Bridge намеренно не является универсальным file uploader. При добавлении нового
+контейнера сначала подтвердите, что это реальный audio format Hermes/Telegram и
+что backend его принимает, затем обновите allowlist и документацию.
 
 ## CLI работает, Hermes — нет
 

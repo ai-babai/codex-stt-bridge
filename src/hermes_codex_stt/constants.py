@@ -12,3 +12,19 @@ RESPONSE_TEXT_FIELD = "text"
 
 DEFAULT_TIMEOUT_SECONDS = 90.0
 DEFAULT_MAX_AUDIO_BYTES = 50 * 1024 * 1024
+MAX_RESPONSE_BYTES = 1024 * 1024
+
+SUPPORTED_AUDIO_SUFFIXES = frozenset(
+    {
+        ".aac",
+        ".flac",
+        ".m4a",
+        ".mp3",
+        ".mp4",
+        ".oga",
+        ".ogg",
+        ".opus",
+        ".wav",
+        ".webm",
+    }
+)
