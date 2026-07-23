@@ -31,7 +31,9 @@
 
 Возможны новый hostname, path, API version или переход на другой transport.
 Bridge специально запрещает отправлять credential headers на hostname,
-отличный от `chatgpt.com`.
+отличный от `chatgpt.com`, и не следует HTTP redirects. Если endpoint начнёт
+перенаправлять запросы, интеграция должна явно остановиться до проверки нового
+URL.
 
 ### Авторизация
 

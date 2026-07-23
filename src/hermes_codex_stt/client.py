@@ -9,7 +9,7 @@ import uuid
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from hermes_codex_stt.auth import (
     AuthError,
@@ -35,6 +35,13 @@ class TranscriptionError(RuntimeError):
 
 class UnauthorizedError(TranscriptionError):
     """The cached Codex access token is no longer accepted."""
+
+
+class _RejectRedirects(HTTPRedirectHandler):
+    """Fail closed so credential headers never follow an HTTP redirect."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+        return None
 
 
 def _content_type(audio_path: Path) -> str:
@@ -103,7 +110,8 @@ def _request_transcript(
     )
 
     try:
-        with urlopen(request, timeout=timeout) as response:
+        opener = build_opener(_RejectRedirects())
+        with opener.open(request, timeout=timeout) as response:
             response_data = response.read()
     except HTTPError as exc:
         if exc.code == 401:

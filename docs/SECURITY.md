@@ -21,6 +21,8 @@ Private GitHub repository уменьшает публичную видимост
 ## Защита в реализации
 
 - endpoint жёстко ограничен HTTPS-hostname `chatgpt.com`;
+- HTTP redirects запрещены, поэтому credential headers не следуют на другой
+  URL или hostname;
 - токены не принимаются через CLI arguments;
 - токены не выводятся в stdout/stderr;
 - response body ошибок не выводится;
