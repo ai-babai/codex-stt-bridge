@@ -102,7 +102,7 @@ This repository must never contain keys, tokens, real audio recordings, or
 transcripts. OAuth credentials are read directly from the local Codex auth
 file and are never copied by the bridge.
 
-Private repository visibility is not a substitute for secret handling.
+This is a public repository. Never commit credentials or private user data.
 Read the complete [security policy](docs/SECURITY.md).
 
 For production, make the checkout and virtual environment

@@ -7,8 +7,8 @@
 Главный риск проекта — утечка Codex OAuth credential material через Git,
 логи, диагностику, exception body или случайные fixtures.
 
-Private GitHub repository уменьшает публичную видимость, но не делает
-размещение секретов допустимым.
+Это публичный репозиторий. Считайте, что каждый отправленный commit и
+сохранившийся Git object может быть немедленно скопирован.
 
 ## Что считается секретом
 
@@ -51,9 +51,9 @@ git grep -n -I -E \
 
 Дополнительно проверить staged blobs secret scanner'ом, если он доступен.
 
-Для private repository личного GitHub-аккаунта нельзя считать server-side
-secret scanning гарантированно доступным. Локальная pre-push проверка остаётся
-обязательной даже при включённых Dependabot и GitHub security features.
+Server-side secret scanning — дополнительная защита, а не полный контроль.
+Локальная pre-push проверка остаётся обязательной даже при включённых GitHub
+security features.
 
 ## Если секрет попал в Git
 

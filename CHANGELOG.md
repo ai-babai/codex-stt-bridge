@@ -5,6 +5,7 @@
 - Made English the primary documentation language and added complete Russian
   versions of the user, operations, security, architecture, compatibility,
   troubleshooting, and contribution guides.
+- Updated repository guidance for public distribution.
 
 ## 0.1.0 — 2026-07-24
 

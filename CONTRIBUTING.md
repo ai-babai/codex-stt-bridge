@@ -4,7 +4,7 @@
 
 ## Principles
 
-- Never add secrets, real audio recordings, or transcripts, even to a private
+- Never add secrets, real audio recordings, or transcripts to this public
   repository.
 - Keep the CLI independent from Hermes.
 - Do not add implicit API-key or local STT fallbacks.
@@ -76,5 +76,5 @@ instructions do not drift between languages.
 3. Scan the staged tree for secrets and sensitive filenames.
 4. Run a live smoke check without writing the transcript to logs.
 5. Record the compatible Codex CLI version.
-6. Push the commit to the private GitHub repository.
+6. Push the commit to the GitHub repository.
 7. Update production in a separate controlled step with a known rollback SHA.

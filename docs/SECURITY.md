@@ -7,8 +7,8 @@
 The primary risk is leaking Codex OAuth credential material through Git,
 logs, diagnostics, exception bodies, or accidental fixtures.
 
-A private GitHub repository reduces public visibility but never makes storing
-secrets acceptable.
+This repository is public. Assume that every pushed commit and retained Git
+object may be copied immediately.
 
 ## Sensitive material
 
@@ -52,9 +52,9 @@ secret values.
 
 Also scan staged blobs with a secret scanner when one is available.
 
-Server-side secret scanning is not guaranteed for a private repository owned
-by a personal GitHub account. A local pre-push check remains mandatory even
-when Dependabot and other GitHub security features are enabled.
+Server-side secret scanning is an additional safeguard, not a complete
+control. A local pre-push check remains mandatory even when GitHub security
+features are enabled.
 
 ## If a secret enters Git
 
