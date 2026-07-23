@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Made English the primary documentation language and added complete Russian
+  versions of the user, operations, security, architecture, compatibility,
+  troubleshooting, and contribution guides.
+
 ## 0.1.0 — 2026-07-24
 
 - Added a standalone `codex-stt` command.

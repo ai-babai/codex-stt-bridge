@@ -1,6 +1,8 @@
-# Установка и эксплуатация
+# Installation and operations
 
-## Рекомендуемая установка
+**English** | [Русский](OPERATIONS.ru.md)
+
+## Recommended installation
 
 ```bash
 git clone git@github.com:ai-babai/hermes-codex-stt.git
@@ -8,35 +10,35 @@ cd hermes-codex-stt
 uv sync --frozen
 ```
 
-Для production checkout:
+For a production checkout:
 
 ```bash
 uv sync --frozen --no-dev
 ```
 
-Codex login должен принадлежать runtime-пользователю:
+The Codex login must belong to the runtime user:
 
 ```bash
 codex login status
 ```
 
-Не копируйте auth другого Unix-пользователя.
+Do not copy another Unix user's auth file.
 
-Проверьте file-based storage в `~/.codex/config.toml`:
+Confirm file-based storage in `~/.codex/config.toml`:
 
 ```toml
 cli_auth_credentials_store = "file"
 ```
 
-И права:
+Set restrictive permissions:
 
 ```bash
 chmod 600 ~/.codex/auth.json
 ```
 
-## Standalone smoke
+## Standalone smoke check
 
-Используйте собственное короткое неперсональное аудио:
+Use a short, non-sensitive recording that you own:
 
 ```bash
 out="$(mktemp)"
@@ -45,43 +47,43 @@ wc -m "$out"
 rm -f "$out"
 ```
 
-Не выводите содержимое транскрипта в общий лог.
+Do not print transcript content to a shared log.
 
-## Hermes config
+## Hermes configuration
 
-Скопируйте структуру из `examples/hermes-stt-provider.yaml` и замените только
-путь к checkout.
+Copy the structure from `examples/hermes-stt-provider.yaml` and change only
+the checkout path.
 
-Ключевые настройки:
+Important settings:
 
-- `echo_transcripts: true` — пользователь видит, что распознано;
-- `timeout: 120` — ограничивает зависший backend;
-- `format: txt` — Hermes читает простой UTF-8 output.
+- `echo_transcripts: true` lets the user verify the recognized text;
+- `timeout: 120` bounds a stalled backend call;
+- `format: txt` tells Hermes to read plain UTF-8 output.
 
-Имя `codex-desktop` намеренно не совпадает со встроенными provider names
-Hermes: встроенные имена имеют приоритет над custom command providers.
+The name `codex-desktop` intentionally differs from built-in Hermes provider
+names because built-in names take precedence over custom command providers.
 
-После изменения конфигурации:
+After changing the configuration:
 
-1. сохранить backup;
-2. проверить standalone CLI;
-3. проверить Hermes STT dispatcher;
-4. перезапустить только gateway;
-5. проверить новое Telegram voice;
-6. убедиться, что обычный текстовый чат продолжает работать.
+1. Save a backup.
+2. Check the standalone CLI.
+3. Check Hermes STT dispatcher behavior.
+4. Restart only the gateway.
+5. Check a new Telegram voice message.
+6. Confirm that normal text chat still works.
 
 ## Production hardening
 
-- executable path должен быть абсолютным;
-- checkout и `.venv` желательно сделать root/admin-owned и read-only для
-  пользователя Hermes;
-- auth и config остаются `hermes:hermes`, mode `0600`;
-- не передавайте OAuth через environment или command arguments;
-- не включайте shell debug/`set -x`;
-- не добавляйте автоматический retry кроме одного refresh после 401;
-- не запускайте bridge как отдельный daemon и не открывайте сетевой порт.
+- Use an absolute executable path.
+- Prefer a root/admin-owned checkout and `.venv` that are read-only for the
+  Hermes runtime user.
+- Keep auth and configuration owned by `hermes:hermes` with mode `0600`.
+- Do not pass OAuth credentials through the environment or command arguments.
+- Do not enable shell debugging or `set -x`.
+- Do not add automatic retries beyond one refresh after HTTP 401.
+- Do not run the bridge as a daemon or expose a network port.
 
-## Обновление
+## Updating
 
 ```bash
 git fetch origin
@@ -90,35 +92,36 @@ git pull --ff-only
 uv sync --frozen --no-dev
 ```
 
-Перед обновлением сохраните текущий commit SHA. При несовместимости вернитесь
-на него обычным Git checkout и повторите `uv sync --frozen`.
+Record the current commit SHA before updating. If compatibility breaks, check
+out that SHA and run `uv sync --frozen --no-dev` again.
 
-## Наблюдаемость
+## Observability
 
-Допустимые operational metrics:
+Allowed operational metrics:
 
-- число успешных/неуспешных запросов;
+- successful and failed request counts;
 - HTTP status;
 - latency;
-- размер аудио;
-- длина транскрипта;
-- версия Codex CLI и bridge.
+- audio size;
+- transcript length;
+- Codex CLI and bridge versions.
 
-Не логировать:
+Never log:
 
 - audio bytes;
 - transcript content;
-- OAuth/account values;
-- полный request/response;
-- Telegram file IDs, если они не нужны для локальной диагностики.
+- OAuth or account values;
+- full requests or responses;
+- Telegram file IDs unless required for local diagnosis.
 
 ## Rollback
 
-Минимальный rollback:
+Minimum rollback:
 
-1. восстановить предыдущий Hermes config без `stt.provider`;
-2. перезапустить gateway;
-3. сохранить checkout и входные данные для локальной диагностики;
-4. убедиться, что text/image turns продолжают работать.
+1. Restore the previous Hermes configuration without the STT provider.
+2. Restart the gateway.
+3. Preserve the checkout and input metadata for local diagnosis.
+4. Confirm that text and image turns still work.
 
-Удаление sessions, foodlog, Codex auth или проекта для rollback не требуется.
+Rollback does not require deleting sessions, foodlog data, Codex auth, or the
+project checkout.

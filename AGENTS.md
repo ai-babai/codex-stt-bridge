@@ -46,5 +46,7 @@ When diagnosing a break:
 - Keep the CLI usable independently from Hermes.
 - Network-dependent checks must be explicit and must use user-owned,
   non-sensitive audio.
-- Update `CHANGELOG.md` and the compatibility document when the internal
+- English documentation files without a language suffix are canonical. Keep
+  every matching `*.ru.md` translation synchronized in the same change.
+- Update `CHANGELOG.md` and both compatibility documents when the internal
   contract changes.

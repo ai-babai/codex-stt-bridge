@@ -1,10 +1,12 @@
-# Архитектура
+# Architecture
 
-## Назначение
+**English** | [Русский](ARCHITECTURE.ru.md)
 
-`hermes-codex-stt` преобразует один локальный аудиофайл в текст. Это
-изолированный адаптер между штатным command-provider интерфейсом Hermes Agent
-и внутренним транскрипционным потоком Codex Desktop.
+## Purpose
+
+`hermes-codex-stt` converts one local audio file into text. It is an isolated
+adapter between the standard Hermes Agent command-provider interface and the
+internal Codex Desktop transcription flow.
 
 ```mermaid
 flowchart LR
@@ -19,63 +21,63 @@ flowchart LR
     HG --> AG["Normal Hermes text turn"]
 ```
 
-## Границы
+## Responsibilities
 
 ### Hermes
 
-Hermes отвечает за:
+Hermes is responsible for:
 
-- получение Telegram-файла;
-- вызов команды с `{input_path}` и `{output_path}`;
-- чтение результата;
-- отображение распознанного текста;
-- последующий обычный агентский turn.
+- receiving the Telegram file;
+- invoking the command with `{input_path}` and `{output_path}`;
+- reading the result;
+- showing the recognized text;
+- continuing with a normal agent turn.
 
-Код Hermes не патчится.
+Hermes core is not patched.
 
 ### Bridge
 
-Bridge отвечает за:
+The bridge is responsible for:
 
-- валидацию входного файла и его размера;
-- чтение текущей Codex OAuth-сессии;
-- прямую загрузку исходного аудио;
-- один refresh и повтор после HTTP 401;
-- проверку формата ответа;
-- атомарную запись результата с mode `0600`;
-- безопасную ошибку без credential material.
+- validating the input file and size;
+- reading the current Codex OAuth session;
+- uploading the original audio directly;
+- refreshing once and retrying once after HTTP 401;
+- validating the response shape;
+- writing the result atomically with mode `0600`;
+- failing safely without exposing credential material.
 
-Bridge не сохраняет свою копию аудио, токенов или account ID.
+The bridge does not retain its own copy of audio, tokens, or the account ID.
 
 ### Codex
 
-Codex CLI отвечает только за первичный login и обновление истёкшей OAuth-сессии.
-Realtime app-server не используется для транскрипции.
+Codex CLI is responsible only for initial login and refreshing an expired
+OAuth session. Its real-time app server is not used for transcription.
 
-Текущая реализация требует file-based credential storage. Codex keyring нельзя
-прочитать напрямую, а внутренний transcription endpoint требует bearer token.
-Если Codex перестанет поддерживать безопасный file-based flow, bridge должен
-остановиться, а не извлекать credentials обходным способом.
+The current implementation requires file-based credential storage. The bridge
+cannot read the Codex keyring directly, while the internal transcription
+endpoint requires a bearer token. If Codex stops supporting a safe file-based
+flow, the bridge must stop rather than extract credentials through an
+unofficial workaround.
 
-## Почему command provider
+## Why a command provider
 
-Command provider является наименьшей устойчивой точкой интеграции:
+A command provider is the smallest stable integration boundary:
 
-- нет отдельного процесса или порта;
-- нет Hermes plugin API;
-- нет MCP;
-- отказ STT не останавливает обычный чат;
-- CLI можно проверить независимо от gateway;
-- обновление bridge не требует изменения Hermes core.
+- no separate process or port;
+- no dependency on the Hermes plugin API;
+- no MCP server;
+- an STT failure does not stop normal text chat;
+- the CLI can be checked independently from the gateway;
+- updating the bridge does not require changing Hermes core.
 
-Официальная документация Hermes предлагает Python plugin для интеграций,
-которым OAuth-refresh или streaming нужны как часть provider API. Здесь refresh
-инкапсулирован внутри самостоятельного однокомандного CLI, поэтому command
-provider остаётся меньшей и лучше изолированной границей. Если появятся
-streaming chunks, provider metadata или интерактивный setup, архитектуру
-следует пересмотреть в пользу plugin.
+The Hermes documentation recommends a Python plugin when OAuth refresh,
+streaming, or provider-specific setup must be part of the provider API. Here,
+refresh is encapsulated inside a deterministic one-command CLI, so the command
+provider remains the smaller and better-isolated boundary. Reconsider a plugin
+if streaming chunks, provider metadata, or interactive setup become necessary.
 
-## Поток ошибки
+## Failure flow
 
 ```mermaid
 flowchart TD
@@ -91,19 +93,19 @@ flowchart TD
     G --> I["Hermes reports STT failure<br/>text chat remains available"]
 ```
 
-## Данные
+## Data flow
 
-| Данные | Читаются | Передаются | Сохраняются bridge |
+| Data | Read | Transmitted | Stored by bridge |
 | --- | ---: | ---: | ---: |
-| Входное аудио | да | `chatgpt.com` | нет |
-| OAuth access token | да | `chatgpt.com` | нет |
-| Codex account ID | да | `chatgpt.com` | нет |
-| Refresh token | напрямую нет | через Codex CLI | нет |
-| Транскрипт | да | Hermes | только в заданный output |
+| Input audio | yes | `chatgpt.com` | no |
+| OAuth access token | yes | `chatgpt.com` | no |
+| Codex account ID | yes | `chatgpt.com` | no |
+| Refresh token | not directly | through Codex CLI | no |
+| Transcript | yes | Hermes | only at the requested output path |
 
 ## Production ownership
 
-Рекомендуемая граница:
+Recommended boundary:
 
 ```text
 /opt/hermes-codex-stt/       root/admin owned, runtime read+execute
@@ -113,5 +115,5 @@ audio cache                  hermes owned
 transcript temp output       hermes owned, mode 0600
 ```
 
-User-writable development checkout допустим для разработки, но не является
-предпочтительным production executable path для credential-handling кода.
+A user-writable checkout is acceptable for development, but it is not the
+preferred production executable path for code that handles credentials.

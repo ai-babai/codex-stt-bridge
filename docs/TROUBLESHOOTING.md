@@ -1,25 +1,30 @@
-# Диагностика
+# Troubleshooting
+
+**English** | [Русский](TROUBLESHOOTING.ru.md)
 
 ## `Codex auth is missing`
 
-- команда запущена не от того Unix-пользователя;
-- `CODEX_AUTH_PATH` указывает не туда;
-- `codex login` не выполнялся.
+Possible causes:
 
-Не копируйте чужой auth-файл. Выполните отдельный login для runtime user.
+- the command runs as the wrong Unix user;
+- `CODEX_AUTH_PATH` points to the wrong location;
+- `codex login` has not been completed.
 
-Если Codex настроен на keyring, bridge не будет читать credentials. Для этого
-экспериментального provider требуется:
+Do not copy another user's auth file. Complete a separate login for the runtime
+user.
+
+If Codex is configured to use a keyring, the bridge cannot read its
+credentials. This experimental provider requires:
 
 ```toml
 cli_auth_credentials_store = "file"
 ```
 
-После изменения выполните новый `codex login`.
+Run `codex login` again after changing the setting.
 
 ## `Codex auth permissions are too broad`
 
-На POSIX bridge требует:
+On POSIX, the bridge requires:
 
 ```bash
 chmod 600 ~/.codex/auth.json
@@ -27,70 +32,71 @@ chmod 600 ~/.codex/auth.json
 
 ## `Codex CLI was not found`
 
-Укажите:
+Set an explicit path:
 
 ```bash
 export CODEX_CLI_PATH=/absolute/path/to/codex
 ```
 
-CLI нужен для refresh после HTTP 401.
+Codex CLI is required to refresh the session after HTTP 401.
 
 ## HTTP 401
 
-Bridge автоматически вызывает `account/read` и повторяет запрос один раз.
-Если повтор не прошёл:
+The bridge automatically invokes `account/read` and retries once. If the retry
+fails:
 
-- проверьте `codex login status`;
-- выполните новый login;
-- не вставляйте callback URL или токены в issue/log.
+- check `codex login status`;
+- complete a new login;
+- never paste a callback URL or token into an issue or log.
 
 ## HTTP 403
 
-Возможны изменение entitlement, account header или новая проверка клиента.
-См. `API-COMPATIBILITY.md`. Не пытайтесь обходить ограничение browser cookies.
+The entitlement, account header, or client verification may have changed. See
+`API-COMPATIBILITY.md`. Do not work around the restriction with browser
+cookies.
 
 ## HTTP 404
 
-С высокой вероятностью изменился внутренний path. Сравните с текущим Codex
-Desktop и upstream `anthnykr/codex-voice`.
+The internal path has probably changed. Compare it with current Codex Desktop
+behavior and the upstream `anthnykr/codex-voice` implementation.
 
-## HTTP 413 или 415
+## HTTP 413 or 415
 
-- уменьшите тестовый файл;
-- проверьте контейнер и MIME type;
-- не добавляйте ffmpeg как скрытый fallback без отдельного решения.
+- Use a smaller test file.
+- Check the container and MIME type.
+- Do not add ffmpeg as a hidden fallback without a separate design decision.
 
 ## `incompatible response`
 
-Backend больше не возвращает строковое поле `text`. Не печатайте полный body:
-проверьте форму ответа только в приватной локальной диагностике и обновите
-parser минимально.
+The backend no longer returns a string `text` field. Do not print the complete
+body. Inspect only its shape in private local diagnostics and update the
+parser narrowly.
 
-## `response is unexpectedly large` или `response is empty`
+## `response is unexpectedly large` or `response is empty`
 
-Это считается несовместимостью backend, а не успешным пустым сообщением.
-Проверьте `API-COMPATIBILITY.md`; не увеличивайте лимит и не принимайте пустой
-результат без анализа нового контракта.
+The bridge treats either result as a backend incompatibility, not as a
+successful empty message. Review `API-COMPATIBILITY.md`; do not increase the
+limit or accept empty output without reviewing the new contract.
 
 ## `Unsupported audio extension`
 
-Bridge намеренно не является универсальным file uploader. При добавлении нового
-контейнера сначала подтвердите, что это реальный audio format Hermes/Telegram и
-что backend его принимает, затем обновите allowlist и документацию.
+The bridge is intentionally not a generic file uploader. Before allowing a new
+container, confirm that it is a real Hermes or Telegram audio format and that
+the backend accepts it. Then update both the allowlist and documentation.
 
-## CLI работает, Hermes — нет
+## The CLI works but Hermes does not
 
-Проверить:
+Check:
 
-- абсолютный путь в `stt.providers.<name>.command`;
-- placeholders `{input_path}` и `{output_path}`;
-- права runtime user;
-- доступ к `~/.codex/auth.json`;
-- systemd network/mount restrictions;
-- timeout Hermes;
-- выбран ли именно `stt.provider: codex-desktop`.
+- the absolute path in `stt.providers.<name>.command`;
+- the `{input_path}` and `{output_path}` placeholders;
+- runtime-user permissions;
+- access to `~/.codex/auth.json`;
+- systemd network or mount restrictions;
+- the Hermes timeout;
+- that `stt.provider` selects `codex-desktop`.
 
-## Hermes работает с текстом, но voice падает
+## Text works in Hermes but voice fails
 
-Это ожидаемая изоляция отказа. Не перезапускайте и не переустанавливайте весь
-Hermes до standalone-проверки bridge.
+This is the intended failure isolation. Do not restart or reinstall all of
+Hermes before checking the bridge independently.

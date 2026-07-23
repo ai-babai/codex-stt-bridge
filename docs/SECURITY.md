@@ -1,42 +1,44 @@
-# Безопасность
+# Security
 
-## Модель угроз
+**English** | [Русский](SECURITY.ru.md)
 
-Главный риск проекта — утечка Codex OAuth credential material через Git,
-логи, диагностику, exception body или случайные fixtures.
+## Threat model
 
-Private GitHub repository уменьшает публичную видимость, но не делает
-размещение секретов допустимым.
+The primary risk is leaking Codex OAuth credential material through Git,
+logs, diagnostics, exception bodies, or accidental fixtures.
 
-## Что считается секретом
+A private GitHub repository reduces public visibility but never makes storing
+secrets acceptable.
 
-- весь `~/.codex/auth.json`;
-- access, refresh и ID tokens;
+## Sensitive material
+
+- the complete `~/.codex/auth.json`;
+- access, refresh, and ID tokens;
 - account ID;
-- browser cookies и callback URLs device auth;
+- browser cookies and device-auth callback URLs;
 - Telegram bot token;
-- реальные `.env`;
-- приватные аудиозаписи и транскрипты.
+- real `.env` files;
+- private audio recordings and transcripts.
 
-## Защита в реализации
+## Implementation safeguards
 
-- endpoint жёстко ограничен HTTPS-hostname `chatgpt.com`;
-- HTTP redirects запрещены, поэтому credential headers не следуют на другой
-  URL или hostname;
-- токены не принимаются через CLI arguments;
-- токены не выводятся в stdout/stderr;
-- response body ошибок не выводится;
-- response body читается с лимитом 1 MiB;
-- subprocess stderr Codex не включается в пользовательскую ошибку;
-- bridge не пишет auth-файл;
-- на POSIX auth-файл с правами шире `0600` отклоняется;
-- принимаются только явно перечисленные audio extensions;
-- output создаётся атомарно с mode `0600`;
-- реальные аудиоформаты и `auth.json` игнорируются Git.
+- The endpoint is restricted to the HTTPS hostname `chatgpt.com`.
+- HTTP redirects are rejected, so credential headers cannot follow a request
+  to another URL or hostname.
+- Tokens are not accepted through CLI arguments.
+- Tokens are never written to stdout or stderr.
+- Error response bodies are not printed.
+- Response reads are limited to 1 MiB.
+- Codex subprocess stderr is excluded from user-facing errors.
+- The bridge never writes to the auth file.
+- On POSIX, auth files with permissions broader than `0600` are rejected.
+- Only explicitly allowlisted audio extensions are accepted.
+- Output is written atomically with mode `0600`.
+- Real audio formats and `auth.json` are ignored by Git.
 
-## Перед каждым push
+## Before every push
 
-Проверить:
+Review:
 
 ```bash
 git status --short
@@ -45,39 +47,40 @@ git grep -n -I -E \
   '(access_token|refresh_token|id_token|Authorization: Bearer|deviceauth/callback)'
 ```
 
-Совпадения в документации и названиях полей допустимы только без значений.
+Documentation and field-name matches are acceptable only when they contain no
+secret values.
 
-Дополнительно проверить staged blobs secret scanner'ом, если он доступен.
+Also scan staged blobs with a secret scanner when one is available.
 
-Для private repository личного GitHub-аккаунта нельзя считать server-side
-secret scanning гарантированно доступным. Локальная pre-push проверка остаётся
-обязательной даже при включённых Dependabot и GitHub security features.
+Server-side secret scanning is not guaranteed for a private repository owned
+by a personal GitHub account. A local pre-push check remains mandatory even
+when Dependabot and other GitHub security features are enabled.
 
-## Если секрет попал в Git
+## If a secret enters Git
 
-1. Не считать удаление файла новым commit достаточным.
-2. Немедленно прекратить дальнейшие push.
-3. Отозвать или обновить скомпрометированную OAuth-сессию.
-4. Очистить Git history.
-5. Повторно проверить все refs и GitHub.
-6. Только после ротации продолжить эксплуатацию.
+1. Do not assume that deleting the file in a new commit is sufficient.
+2. Stop further pushes immediately.
+3. Revoke or refresh the compromised OAuth session.
+4. Remove the secret from Git history.
+5. Scan all refs and GitHub again.
+6. Resume operation only after rotation and verification.
 
-Не публиковать секрет в issue при описании инцидента.
+Never paste the secret into an issue while reporting the incident.
 
 ## Runtime permissions
 
-Рекомендуется:
+Recommended:
 
 ```text
 ~/.codex/auth.json      0600
 Hermes config           0600
 transcript output       0600
-project source          без credential copies
+project source          no credential copies
 ```
 
-Запускать bridge следует от того же изолированного Unix-пользователя, которому
-принадлежит Codex login и Hermes runtime.
+Run the bridge as the same isolated Unix user that owns the Codex login and
+Hermes runtime.
 
-Production executable рекомендуется хранить в admin-owned/read-only checkout.
-Command provider запускается с полными правами Unix-пользователя Hermes;
-изменяемый агентом credential-handling код увеличивает persistence risk.
+Keep the production executable in an admin-owned, read-only checkout. A
+command provider runs with the full permissions of the Hermes Unix user;
+agent-writable credential-handling code increases the persistence risk.

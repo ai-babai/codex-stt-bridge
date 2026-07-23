@@ -1,18 +1,20 @@
-# Совместимость внутреннего Codex Desktop API
+# Internal Codex Desktop API compatibility
 
-## Статус
+**English** | [Русский](API-COMPATIBILITY.ru.md)
 
-Используемый endpoint не является публичным OpenAI API. Контракт был
-восстановлен по поведению Codex Desktop и реализации
+## Status
+
+The endpoint used by this project is not a public OpenAI API. Its contract was
+inferred from Codex Desktop behavior and
 [`anthnykr/codex-voice`](https://github.com/anthnykr/codex-voice).
 
-Нельзя рассчитывать на версионирование, changelog или обратную совместимость.
+Do not expect versioning, a changelog, or backward-compatibility guarantees.
 
-## Проверенная матрица
+## Verified matrix
 
-Последний live smoke: `2026-07-24`.
+Last live smoke check: `2026-07-24`.
 
-| Компонент | Проверенная версия/форма |
+| Component | Verified version or form |
 | --- | --- |
 | Bridge | `0.1.0` |
 | Codex CLI | `0.145.0`, ChatGPT OAuth |
@@ -21,13 +23,13 @@
 | Input | Telegram OGG/Opus |
 | Upstream reference | `anthnykr/codex-voice@ee4570c4ea71` |
 
-Установка собранного пакета дополнительно проверена на Python 3.11. Эта
-матрица не означает, что внутренний endpoint гарантированно совместим со всеми
-следующими версиями.
+Installation of the built package was also verified on Python 3.11. This
+matrix does not guarantee that the internal endpoint will remain compatible
+with later versions.
 
-## Текущий контракт
+## Current contract
 
-| Часть | Текущее значение |
+| Part | Current value |
 | --- | --- |
 | Method | `POST` |
 | URL | `https://chatgpt.com/backend-api/transcribe` |
@@ -39,101 +41,100 @@
 | Success response | JSON object with string field `text` |
 | OAuth refresh | Codex app-server `account/read`, `refreshToken: true` |
 
-Bridge поддерживает только `cli_auth_credentials_store = "file"`. Keyring
-является хорошим общим выбором для Codex CLI, но текущий внутренний endpoint
-нельзя вызвать без bearer token, а bridge не должен пытаться извлекать его из
-OS keychain обходным способом.
+The bridge supports only `cli_auth_credentials_store = "file"`. A keyring is a
+good general choice for Codex CLI, but this internal endpoint cannot be called
+without a bearer token, and the bridge must not extract it from the OS
+keychain through an unofficial workaround.
 
-Все изменяемые request constants находятся в
+All variable request constants are centralized in
 `src/hermes_codex_stt/constants.py`.
 
-## Основные точки возможной поломки
+## Likely compatibility breaks
 
 ### Endpoint
 
-Возможны новый hostname, path, API version или переход на другой transport.
-Bridge специально запрещает отправлять credential headers на hostname,
-отличный от `chatgpt.com`, и не следует HTTP redirects. Если endpoint начнёт
-перенаправлять запросы, интеграция должна явно остановиться до проверки нового
-URL.
+The hostname, path, API version, or transport may change. The bridge refuses
+to send credential headers to any hostname other than `chatgpt.com` and does
+not follow HTTP redirects. If the endpoint starts redirecting, stop the
+integration until the new URL has been reviewed explicitly.
 
-### Авторизация
+### Authentication
 
-Может измениться:
+Potential changes include:
 
-- структура `~/.codex/auth.json`;
-- название `access_token` или `account_id`;
-- обязательный scope;
-- формат account header;
-- необходимость cookie, device binding или proof token;
-- способ обновления через Codex app-server.
+- the structure of `~/.codex/auth.json`;
+- the names of `access_token` or `account_id`;
+- required OAuth scopes;
+- the account header format;
+- cookie, device-binding, or proof-token requirements;
+- refresh behavior through the Codex app server.
 
-Не следует обходить новый auth-контроль копированием browser cookies.
+Do not bypass new authentication controls by copying browser cookies.
 
-Если file-based auth исчезнет или перестанет поддерживаться, это breaking
-change. Безопасный результат — явная ошибка и отключение STT provider.
+Loss of file-based authentication support is a breaking change. The safe
+behavior is an explicit error and disabled STT provider.
 
-### Multipart
+### Multipart request
 
-Может измениться:
+Potential changes include:
 
-- имя поля `file`;
-- список MIME types;
-- лимит размера;
-- обязательные дополнительные поля;
-- необходимость предварительной конвертации.
+- the `file` field name;
+- accepted MIME types;
+- upload size limits;
+- new required fields;
+- required audio conversion.
 
-### Ответ
+### Response
 
-Поле `text` может быть переименовано или заменено потоковым ответом,
-сегментами либо вложенной структурой. Ответ ограничен 1 MiB; превышение и
-пустой транскрипт считаются ошибкой.
+The `text` field may be renamed or replaced by a stream, segments, or a nested
+structure. Responses are limited to 1 MiB; oversized and empty transcripts
+are treated as errors.
 
 ### Client identity
 
-Backend может начать строго проверять `originator`, версию Codex Desktop,
-`User-Agent`, OS или другие заголовки.
+The backend may begin enforcing `originator`, Codex Desktop version,
+`User-Agent`, operating system, or other headers.
 
-## Значение HTTP-ошибок
+## Interpreting HTTP errors
 
-Это диагностические гипотезы, а не гарантированный публичный контракт:
+These are diagnostic hypotheses, not a guaranteed public contract:
 
-| Статус | Сначала проверить |
+| Status | Check first |
 | ---: | --- |
-| 400 | multipart, MIME type, новые обязательные поля |
-| 401 | срок OAuth; прошёл ли `account/read` refresh |
-| 403 | entitlement, account header, новая client attestation |
-| 404 | endpoint/path изменился |
-| 413 | серверный лимит размера |
-| 415 | MIME type или поддерживаемый контейнер изменился |
-| 429 | rate limit; не добавлять агрессивные retry |
-| 5xx | временная проблема backend или несовместимость |
+| 400 | multipart shape, MIME type, new required fields |
+| 401 | OAuth expiry and whether `account/read` refresh succeeded |
+| 403 | entitlement, account header, new client attestation |
+| 404 | changed endpoint or path |
+| 413 | server-side size limit |
+| 415 | changed MIME type or supported container |
+| 429 | rate limit; do not add aggressive retries |
+| 5xx | temporary backend failure or incompatibility |
 
-## Безопасная процедура обновления
+## Safe update procedure
 
-1. Убедиться, что обычный Codex Desktop всё ещё распознаёт голос.
-2. Проверить свежие изменения в `anthnykr/codex-voice` и Codex CLI.
-3. Использовать короткое собственное неперсональное аудио.
-4. В диагностике сохранять только:
+1. Confirm that normal Codex Desktop voice transcription still works.
+2. Review recent changes in `anthnykr/codex-voice` and Codex CLI.
+3. Use a short, non-sensitive recording that you own.
+4. Record only:
    - UTC timestamp;
-   - версию bridge и Codex CLI;
+   - bridge and Codex CLI versions;
    - HTTP status;
    - exit code;
-   - длину транскрипта.
-5. Не сохранять request headers, auth JSON, audio bytes, response body или
-   текст транскрипта.
-6. Менять constants и parser минимально.
-7. Проверить standalone CLI.
-8. Проверить Hermes command dispatch.
-9. Проверить новое входящее Telegram voice.
-10. Обновить этот документ и `CHANGELOG.md`.
+   - transcript length.
+5. Do not retain request headers, auth JSON, audio bytes, response bodies, or
+   transcript text.
+6. Change constants and parsing as narrowly as possible.
+7. Check the standalone CLI.
+8. Check Hermes command dispatch.
+9. Check a new incoming Telegram voice message.
+10. Update this document and `CHANGELOG.md`.
 
-## Когда прекратить использование
+## When to stop using the bridge
 
-Отключить provider и вернуться к text-only Hermes, если backend требует:
+Disable the provider and keep Hermes text-only if the backend requires:
 
 - browser cookies;
-- обход device attestation;
-- передачу токенов третьему домену;
-- модификацию Codex auth-файла вручную;
-- неясный или небезопасный credential flow.
+- bypassing device attestation;
+- sending tokens to a third-party domain;
+- manual modification of the Codex auth file;
+- an unclear or unsafe credential flow.

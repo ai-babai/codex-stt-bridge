@@ -1,44 +1,47 @@
 # Hermes Codex STT
 
-Небольшая команда для расшифровки аудио через тот же внутренний backend,
-который использует Codex Desktop. Команда использует уже существующую
-ChatGPT/Codex OAuth-сессию и подключается к Hermes Agent как штатный
-command-type STT provider.
+**English** | [Русский](README.ru.md)
+
+A small command-line bridge that transcribes audio through the same internal
+backend used by Codex Desktop. It reuses an existing ChatGPT/Codex OAuth
+session and integrates with Hermes Agent as a standard command-type STT
+provider.
 
 ```text
-Telegram voice
+Telegram voice message
   → Hermes STT dispatcher
   → codex-stt
   → Codex Desktop transcription backend
   → UTF-8 transcript
-  → обычный текстовый turn Hermes
+  → normal Hermes text turn
 ```
 
-## Статус и ограничения
+## Status and limitations
 
-Рабочий прототип проверен на Linux с Telegram OGG/Opus и авторизацией Codex
-через ChatGPT OAuth:
+The working prototype has been verified on Linux with Telegram OGG/Opus input
+and Codex authenticated through ChatGPT OAuth:
 
-- OpenAI Platform API key не требуется и не используется;
-- Whisper, Faster Whisper и другие локальные STT-модели не используются;
-- ffmpeg и предварительная конвертация не требуются;
-- отдельный Hermes plugin, MCP-сервер, daemon или контейнер не нужны.
+- no OpenAI Platform API key is required or used;
+- Whisper, Faster Whisper, and other local STT models are not used;
+- ffmpeg and audio pre-conversion are not required;
+- no custom Hermes plugin, MCP server, daemon, or container is required.
 
-Транскрипционный endpoint Codex Desktop является внутренним и официально не
-документирован. OpenAI может изменить его без предупреждения. Это
-экспериментальная интеграция, а не официальный OpenAI SDK.
+The Codex Desktop transcription endpoint is internal and undocumented. OpenAI
+may change it without notice. This is an experimental compatibility bridge,
+not an official OpenAI SDK or API integration.
 
-## Требования
+## Requirements
 
-- Python 3.11+;
-- установленный Codex CLI;
-- выполненный `codex login` от того же Unix-пользователя;
-- file-based Codex credential storage (`cli_auth_credentials_store = "file"`);
-- права `0600` на `~/.codex/auth.json`;
-- доступ к `https://chatgpt.com`;
-- Hermes Agent — только если команда используется как его STT provider.
+- Python 3.11 or newer;
+- Codex CLI installed;
+- `codex login` completed by the same Unix user that runs the bridge;
+- file-based Codex credential storage
+  (`cli_auth_credentials_store = "file"`);
+- mode `0600` on `~/.codex/auth.json`;
+- network access to `https://chatgpt.com`;
+- Hermes Agent only when the command is used as an STT provider.
 
-## Установка
+## Installation
 
 ```bash
 git clone git@github.com:ai-babai/hermes-codex-stt.git
@@ -46,13 +49,13 @@ cd hermes-codex-stt
 uv sync
 ```
 
-Для production:
+For production:
 
 ```bash
 uv sync --frozen --no-dev
 ```
 
-## Использование
+## Usage
 
 ```bash
 .venv/bin/codex-stt \
@@ -60,63 +63,64 @@ uv sync --frozen --no-dev
   --output /path/to/transcript.txt
 ```
 
-Без `--output` транскрипт выводится в stdout:
+Without `--output`, the transcript is written to stdout:
 
 ```bash
 .venv/bin/codex-stt --input /path/to/message.ogg
 ```
 
-Дополнительные параметры:
+Optional arguments:
 
-- `--auth-path` — нестандартный путь к Codex `auth.json`;
-- `--timeout` — таймаут HTTPS-запроса;
-- `--language` — совместимый с Hermes аргумент; backend сейчас сам определяет
-  язык, поэтому значение не отправляется.
+- `--auth-path` — a non-default path to Codex `auth.json`;
+- `--timeout` — HTTPS request timeout in seconds;
+- `--language` — accepted for Hermes compatibility; the backend currently
+  detects the language automatically, so the value is not sent.
 
-Переменные окружения:
+Environment variables:
 
-- `CODEX_AUTH_PATH` — альтернативный путь к Codex auth;
-- `CODEX_CLI_PATH` — путь к Codex CLI для обновления истёкшей OAuth-сессии.
+- `CODEX_AUTH_PATH` — alternative path to the Codex auth file;
+- `CODEX_CLI_PATH` — path to Codex CLI for refreshing an expired OAuth
+  session.
 
-## Hermes
+## Hermes configuration
 
-Пример находится в
+Start with
 [`examples/hermes-stt-provider.yaml`](examples/hermes-stt-provider.yaml).
 
-Команда возвращает ненулевой exit code при ошибке. Успешный транскрипт
-записывается атомарно с правами `0600`.
+The command returns a non-zero exit code on failure. A successful transcript
+is written atomically with mode `0600`.
 
 Exit codes:
 
-- `0` — транскрипт создан;
-- `1` — ошибка auth, сети, совместимости API или файловой операции;
-- `2` — некорректные CLI arguments.
+- `0` — transcript created successfully;
+- `1` — authentication, network, API compatibility, or file operation error;
+- `2` — invalid CLI arguments.
 
-## Безопасность
+## Security
 
-Проект не содержит и не должен содержать ключи, токены, реальные аудиофайлы
-или транскрипты. OAuth читается непосредственно из локального Codex auth-файла
-и не копируется.
+This repository must never contain keys, tokens, real audio recordings, or
+transcripts. OAuth credentials are read directly from the local Codex auth
+file and are never copied by the bridge.
 
-Private-видимость репозитория не считается защитой от утечки секретов. Полные
-правила: [`docs/SECURITY.md`](docs/SECURITY.md).
+Private repository visibility is not a substitute for secret handling.
+Read the complete [security policy](docs/SECURITY.md).
 
-Production checkout и виртуальное окружение рекомендуется делать
-администраторскими/read-only для runtime-пользователя Hermes. Это не скрывает
-OAuth от самого пользователя, но не позволяет агенту незаметно закрепить
-изменение в credential-handling коде.
+For production, make the checkout and virtual environment
+administrator-owned and read-only for the Hermes runtime user. This does not
+hide OAuth credentials from that user, but it prevents the agent from
+silently persisting changes to the credential-handling code.
 
-## Документация
+## Documentation
 
-- [Архитектура](docs/ARCHITECTURE.md)
-- [Контракт внутреннего API](docs/API-COMPATIBILITY.md)
-- [Безопасность](docs/SECURITY.md)
-- [Установка и эксплуатация](docs/OPERATIONS.md)
-- [Диагностика](docs/TROUBLESHOOTING.md)
-- [Разработка](CONTRIBUTING.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Internal API compatibility](docs/API-COMPATIBILITY.md)
+- [Security](docs/SECURITY.md)
+- [Installation and operations](docs/OPERATIONS.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Development](CONTRIBUTING.md)
 
-## Происхождение
+## Attribution
 
-Поток Codex Desktop transcription был найден благодаря
+The Codex Desktop transcription flow was identified with the help of
 [`anthnykr/codex-voice`](https://github.com/anthnykr/codex-voice).
-Подробности: [NOTICE.md](NOTICE.md).
+See [NOTICE.md](NOTICE.md) for details.
