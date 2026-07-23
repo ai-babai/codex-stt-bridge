@@ -1,0 +1,10 @@
+stt:
+  enabled: true
+  provider: codex-desktop
+  echo_transcripts: true
+  providers:
+    codex-desktop:
+      type: command
+      command: "/path/to/hermes-codex-stt/.venv/bin/codex-stt --input {input_path} --output {output_path} --language {language}"
+      format: txt
+      timeout: 120
