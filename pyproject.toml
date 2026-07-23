@@ -36,7 +36,7 @@ Issues = "https://github.com/ai-babai/codex-stt-bridge/issues"
 Repository = "https://github.com/ai-babai/codex-stt-bridge"
 
 [build-system]
-requires = ["hatchling>=1.27"]
+requires = ["hatchling>=1.31.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
