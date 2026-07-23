@@ -91,8 +91,8 @@ def refresh_credentials(
             "method": "initialize",
             "params": {
                 "clientInfo": {
-                    "name": "hermes-codex-stt",
-                    "version": "0.1.0",
+                    "name": "codex-stt-bridge",
+                    "version": "0.2.0",
                 },
                 "capabilities": {
                     "experimentalApi": True,

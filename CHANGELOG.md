@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.2.0 — 2026-07-24
+
+- Renamed the project and Python package to `codex-stt-bridge` while keeping
+  the stable `codex-stt` command.
+- Repositioned the bridge as an agent-independent voice-to-text CLI with
+  examples for Hermes Agent and OpenClaw.
+- Clarified ChatGPT plan and subscription-based Codex login support without
+  implying that the internal transcription endpoint is an official plan
+  entitlement.
+- Added safe desktop and headless instructions for creating `auth.json`
+  through the official Codex CLI.
 - Made English the primary documentation language and added complete Russian
   versions of the user, operations, security, architecture, compatibility,
   troubleshooting, and contribution guides.

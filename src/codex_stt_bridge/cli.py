@@ -1,4 +1,4 @@
-"""Command-line interface for Hermes Codex STT."""
+"""Command-line interface for Codex STT Bridge."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-from hermes_codex_stt import __version__
-from hermes_codex_stt.client import TranscriptionError, transcribe_audio
-from hermes_codex_stt.constants import DEFAULT_TIMEOUT_SECONDS
+from codex_stt_bridge import __version__
+from codex_stt_bridge.client import TranscriptionError, transcribe_audio
+from codex_stt_bridge.constants import DEFAULT_TIMEOUT_SECONDS
 
 
 def write_transcript(output_path: Path, transcript: str) -> None:
