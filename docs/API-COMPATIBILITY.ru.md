@@ -4,24 +4,27 @@
 
 ## Статус
 
-Используемый endpoint не является публичным OpenAI API. Контракт был
+Используемый endpoint транскрибации не является публичным OpenAI API. Контракт
 восстановлен по поведению Codex Desktop и реализации
-[`anthnykr/codex-voice`](https://github.com/anthnykr/codex-voice).
+[`anthnykr/codex-voice`](https://github.com/anthnykr/codex-voice). Последовательность
+refresh соответствует официальному протоколу
+[`codex app-server`](https://github.com/openai/codex/blob/ceb2ffb793b7b990b435e70b4d71ee86eba823c4/codex-rs/app-server/README.md#initialization).
 
 Нельзя рассчитывать на версионирование, changelog или обратную совместимость.
 
 ## Проверенная матрица
 
-Последний live smoke: `2026-07-24`.
+Последний live smoke: `2026-08-21`.
 
 | Компонент | Проверенная версия/форма |
 | --- | --- |
-| Bridge | `0.2.0` |
+| Bridge | `0.2.1` |
 | Codex CLI | `0.145.0`, ChatGPT OAuth |
 | Hermes Agent | `0.19.0`, upstream tag `v2026.7.20` |
 | Server | Ubuntu 24.04, Python 3.12 |
 | Input | Telegram OGG/Opus |
 | Upstream reference | `anthnykr/codex-voice@ee4570c4ea71` |
+| App-server protocol | `openai/codex@ceb2ffb793b7` |
 
 Установка собранного пакета дополнительно проверена на Python 3.11. Эта
 матрица не означает, что внутренний endpoint гарантированно совместим со всеми
@@ -39,7 +42,7 @@
 | Body | `multipart/form-data` |
 | File field | `file` |
 | Success response | JSON object with string field `text` |
-| OAuth refresh | Codex app-server `account/read`, `refreshToken: true` |
+| OAuth refresh | Stdio-handshake Codex app-server: `initialize` → `initialized` → `account/read` с `refreshToken: true` |
 
 Bridge поддерживает только `cli_auth_credentials_store = "file"`. Keyring
 является хорошим общим выбором для Codex CLI, но текущий внутренний endpoint

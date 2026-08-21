@@ -1,6 +1,6 @@
 [project]
 name = "codex-stt-bridge"
-version = "0.2.0"
+version = "0.2.1"
 description = "Speech-to-text CLI bridge for AI agents using a local Codex login"
 readme = "README.md"
 requires-python = ">=3.11"
