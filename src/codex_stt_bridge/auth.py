@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import json
 import os
+import select
 import shutil
 import stat
 import subprocess  # nosec B404
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from codex_stt_bridge import __version__
 
 
 class AuthError(RuntimeError):
@@ -80,58 +84,96 @@ def resolve_codex_binary() -> str:
     )
 
 
+def _refresh_via_app_server(binary: str, *, timeout: float) -> bool:
+    """Refresh file-backed Codex credentials through the app-server protocol."""
+    initialize = {
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "clientInfo": {"name": "codex-stt-bridge", "version": __version__},
+            "capabilities": {
+                "experimentalApi": True,
+                "optOutNotificationMethods": [],
+            },
+        },
+    }
+    initialized = {"method": "initialized", "params": {}}
+    account_read = {
+        "id": 2,
+        "method": "account/read",
+        "params": {"refreshToken": True},
+    }
+
+    try:
+        # The executable is resolved from a fixed local allowlist above.
+        process = subprocess.Popen(  # nosec B603
+            [binary, "app-server", "--listen", "stdio://"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=False,
+            bufsize=0,
+        )
+    except OSError as exc:
+        raise AuthError(f"Codex auth refresh could not start: {exc}") from exc
+
+    stdin = process.stdin
+    stdout = process.stdout
+    if stdin is None or stdout is None:
+        process.terminate()
+        process.wait(timeout=3)
+        raise AuthError("Codex auth refresh could not open stdio")
+
+    deadline = time.monotonic() + timeout
+
+    def send(message: dict[str, Any]) -> None:
+        stdin.write((json.dumps(message) + "\n").encode())
+        stdin.flush()
+
+    def wait_for_result(request_id: int) -> bool:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return False
+            readable, _, _ = select.select([stdout], [], [], remaining)
+            if not readable:
+                return False
+            line = stdout.readline()
+            if not line:
+                return False
+            try:
+                response: Any = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(response, dict) and response.get("id") == request_id:
+                return "result" in response and "error" not in response
+
+    try:
+        send(initialize)
+        if not wait_for_result(1):
+            return False
+        send(initialized)
+        send(account_read)
+        return wait_for_result(2)
+    finally:
+        stdin.close()
+        try:
+            process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            process.terminate()
+            process.wait(timeout=3)
+
+
 def refresh_credentials(
     auth_path: Path,
     *,
     timeout: float = 30.0,
 ) -> CodexCredentials:
-    messages = (
-        {
-            "id": 1,
-            "method": "initialize",
-            "params": {
-                "clientInfo": {
-                    "name": "codex-stt-bridge",
-                    "version": "0.2.0",
-                },
-                "capabilities": {
-                    "experimentalApi": True,
-                    "optOutNotificationMethods": [],
-                },
-            },
-        },
-        {
-            "id": 2,
-            "method": "account/read",
-            "params": {"refreshToken": True},
-        },
-    )
-    input_text = "".join(json.dumps(message) + "\n" for message in messages)
-
     try:
-        # The executable is resolved from a fixed local allowlist above.
-        result = subprocess.run(  # nosec B603
-            [resolve_codex_binary(), "app-server", "--listen", "stdio://"],
-            input=input_text,
-            text=True,
-            capture_output=True,
-            timeout=timeout,
-            check=False,
-        )
+        confirmed = _refresh_via_app_server(resolve_codex_binary(), timeout=timeout)
     except subprocess.TimeoutExpired as exc:
         raise AuthError("Codex auth refresh timed out") from exc
-    except OSError as exc:
-        raise AuthError(f"Codex auth refresh could not start: {exc}") from exc
 
-    if result.returncode != 0:
-        raise AuthError(f"Codex auth refresh failed with exit code {result.returncode}")
-
-    for line in result.stdout.splitlines():
-        try:
-            message: Any = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if message.get("id") == 2 and "result" in message:
-            return read_credentials(auth_path)
-
+    if confirmed:
+        return read_credentials(auth_path)
     raise AuthError("Codex did not confirm the auth refresh request")

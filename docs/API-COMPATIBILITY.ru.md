@@ -39,7 +39,7 @@
 | Body | `multipart/form-data` |
 | File field | `file` |
 | Success response | JSON object with string field `text` |
-| OAuth refresh | Codex app-server `account/read`, `refreshToken: true` |
+| OAuth refresh | Stdio-handshake Codex app-server: `initialize` → `initialized` → `account/read` с `refreshToken: true` |
 
 Bridge поддерживает только `cli_auth_credentials_store = "file"`. Keyring
 является хорошим общим выбором для Codex CLI, но текущий внутренний endpoint

@@ -39,7 +39,7 @@ with later versions.
 | Body | `multipart/form-data` |
 | File field | `file` |
 | Success response | JSON object with string field `text` |
-| OAuth refresh | Codex app-server `account/read`, `refreshToken: true` |
+| OAuth refresh | Codex app-server stdio handshake: `initialize` → `initialized` → `account/read` with `refreshToken: true` |
 
 The bridge supports only `cli_auth_credentials_store = "file"`. A keyring is a
 good general choice for Codex CLI, but this internal endpoint cannot be called

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Fixed Codex OAuth refresh with the current app-server handshake:
+  `initialize` → `initialized` → `account/read` with `refreshToken: true`.
+- Kept app-server stdio unbuffered so initialization notifications cannot hide
+  a buffered refresh response from the timeout guard.
+
 ## 0.2.0 — 2026-07-24
 
 - Renamed the project and Python package to `codex-stt-bridge` while keeping
