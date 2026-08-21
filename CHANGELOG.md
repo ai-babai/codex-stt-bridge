@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.1 — 2026-08-21
+
 - Fixed Codex OAuth refresh with the current app-server handshake:
   `initialize` → `initialized` → `account/read` with `refreshToken: true`.
 - Kept app-server stdio unbuffered so initialization notifications cannot hide

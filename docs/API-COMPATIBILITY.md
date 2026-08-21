@@ -4,24 +4,27 @@
 
 ## Status
 
-The endpoint used by this project is not a public OpenAI API. Its contract was
-inferred from Codex Desktop behavior and
-[`anthnykr/codex-voice`](https://github.com/anthnykr/codex-voice).
+The transcription endpoint used by this project is not a public OpenAI API.
+Its contract was inferred from Codex Desktop behavior and
+[`anthnykr/codex-voice`](https://github.com/anthnykr/codex-voice). The refresh
+sequence follows the official
+[`codex app-server` protocol](https://github.com/openai/codex/blob/ceb2ffb793b7b990b435e70b4d71ee86eba823c4/codex-rs/app-server/README.md#initialization).
 
 Do not expect versioning, a changelog, or backward-compatibility guarantees.
 
 ## Verified matrix
 
-Last live smoke check: `2026-07-24`.
+Last live smoke check: `2026-08-21`.
 
 | Component | Verified version or form |
 | --- | --- |
-| Bridge | `0.2.0` |
+| Bridge | `0.2.1` |
 | Codex CLI | `0.145.0`, ChatGPT OAuth |
 | Hermes Agent | `0.19.0`, upstream tag `v2026.7.20` |
 | Server | Ubuntu 24.04, Python 3.12 |
 | Input | Telegram OGG/Opus |
 | Upstream reference | `anthnykr/codex-voice@ee4570c4ea71` |
+| App-server protocol | `openai/codex@ceb2ffb793b7` |
 
 Installation of the built package was also verified on Python 3.11. This
 matrix does not guarantee that the internal endpoint will remain compatible
