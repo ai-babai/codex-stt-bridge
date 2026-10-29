@@ -28,3 +28,4 @@ auth.json
 transcripts/
 recordings/
 .cache/
+node_modules/

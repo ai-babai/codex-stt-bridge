@@ -137,6 +137,7 @@ Exit codes:
 
 ## Интеграция с агентами
 
+- [Плагин голосового ввода BB](integrations/bb/README.ru.md)
 - [Пример command provider для Hermes](examples/hermes-stt-provider.yaml)
 - [Пример media CLI для OpenClaw](examples/openclaw-media.json5)
 

@@ -137,6 +137,7 @@ Exit codes:
 
 ## Agent integration
 
+- [BB voice-input plugin](integrations/bb/README.md)
 - [Hermes command-provider example](examples/hermes-stt-provider.yaml)
 - [OpenClaw media CLI example](examples/openclaw-media.json5)
 

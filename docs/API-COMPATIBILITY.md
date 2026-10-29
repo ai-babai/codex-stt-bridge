@@ -30,6 +30,12 @@ Installation of the built package was also verified on Python 3.11. This
 matrix does not guarantee that the internal endpoint will remain compatible
 with later versions.
 
+Additional integration check on `2026-10-29`: macOS 15.8.1, Python 3.13.2,
+bridge 0.2.1, Codex CLI 0.165.0 and BB 0.48.0 with the optional BB plugin 0.1.0.
+Synthetic Russian WebM/Opus and WAV were checked through BB's configured
+voice service. This verifies transcription; an expired-token refresh with
+this newer CLI was not forced. The endpoint contract below did not change.
+
 ## Current contract
 
 | Part | Current value |

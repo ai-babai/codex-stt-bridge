@@ -1,0 +1,21 @@
+{
+  "name": "bb-plugin-codex-stt-bridge",
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "bb": ">=0.48",
+    "bbPluginSdk": ">=0.6.94"
+  },
+  "bb": {
+    "name": "Codex STT Bridge",
+    "description": "Voice input through the local codex-stt CLI and its existing Codex login.",
+    "branding": { "icon": "Mic" },
+    "server": "./server.ts",
+    "skills": []
+  },
+  "devDependencies": {
+    "@get-bb/plugin-sdk": "0.6.94",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

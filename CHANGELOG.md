@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added an optional BB 0.48+ voice-input plugin that invokes the existing
+  `codex-stt` CLI on the BB server, with private temporary files, cancellation,
+  bounded output and no credential access or child-output logging.
+- Verified BB WebM/WAV dispatch on macOS with the unchanged internal
+  transcription contract and documented the integration in English/Russian.
+
 ## 0.2.1 — 2026-08-21
 
 - Fixed Codex OAuth refresh with the current app-server handshake:
